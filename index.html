@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinèolis India - Home</title>
+    <link rel="icon" href="/img/Cinepolis2019_mg.svg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+
+        .screen {
+            width: 100%;
+            height: 50px;
+            background-color: #08285B;
+            color: white;
+            line-height: 50px;
+            margin-bottom: 30px;
+            margin-top: 80px;
+        }
+
+        .seating-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stair-space {
+            width: 40px;
+        }
+
+        .row-label {
+            margin-right: 15px;
+            margin-left: 15px;
+            font-weight: bold;
+        }
+
+        .seat {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            background-color: white;
+            margin: 0 5px;
+            border: 2px solid lightgrey;
+        }
+
+        .seat:hover {
+            transform: scale(1.2);
+            background-color: #08285B;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .selected {
+            background-color: #EEDC82;
+        }
+
+        .occupied {
+            background-color: gray;
+            pointer-events: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: white;
+            color: black;
+            border: 2px solid lightgrey;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+            /* margin-top: 20px; */
+            margin-bottom: 50px;
+        }
+
+        button:hover {
+            background: #08285B;
+            color: white;
+            transition: 0.6s;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 50px; color: #08285B;">Cinèolis Represent</h1>
+        <div class="seating-container" id="seatingContainer"></div>
+        <div class="summary">
+            <div class="screen">SCREEN - 1</div>
+            <button onclick="proceedBooking()">Proceed</button>
+        </div>
+    </div>
+
+    <script>
+        const seatingContainer = document.getElementById("seatingContainer");
+        const rowLabels = "ABCDEFGHIJKL";
+        let selectedSeats = [];
+        const seatPrices = { marvel: 400, royal: 300, lounge: 400, prime: 320 };
+
+        function createSeats(category, startRow, rows, price, className) {
+            for (let row = 0; row < rows; row++) {
+                const rowDiv = document.createElement("div");
+                rowDiv.classList.add("row");
+
+                const rowLabelLeft = document.createElement("span");
+                rowLabelLeft.classList.add("row-label");
+                rowLabelLeft.innerText = rowLabels[startRow + row];
+                rowDiv.appendChild(rowLabelLeft);
+
+                for (let col = 1; col <= 18; col++) {
+                    if (col === 5 || col === 15) {
+                        rowDiv.appendChild(document.createElement("div")).classList.add("stair-space");
+                    }
+                    const seat = document.createElement("div");
+                    seat.classList.add("seat", className);
+                    seat.dataset.seat = rowLabels[startRow + row] + col;
+                    seat.dataset.price = price;
+                    seat.innerText = col;
+                    seat.onclick = function () {
+                        if (!this.classList.contains("occupied")) {
+                            this.classList.toggle("selected");
+                        }
+                    };
+                    rowDiv.appendChild(seat);
+                }
+
+                const rowLabelRight = document.createElement("span");
+                rowLabelRight.classList.add("row-label");
+                rowLabelRight.innerText = rowLabels[startRow + row];
+                rowDiv.appendChild(rowLabelRight);
+
+                seatingContainer.appendChild(rowDiv);
+            }
+        }
+
+        function generateCaptcha() {
+            const captchaTypes = [
+                // () => ({ question: "What is 5 + 3?", answer: "8" }),
+                // () => ({ question: "What is 12 - 7?", answer: "5" }),
+                // () => ({ question: "Spell 'Movie' backwards.", answer: "eivoM" }),
+                // () => ({ question: "What comes after letter 'K' in the alphabet?", answer: "L" }),
+                // () => ({ question: "What is 3 times 4?", answer: "12" }),
+                // () => ({ question: "What is the first letter of 'Cinema'?", answer: "C" }),
+                // () => ({ question: "What is 15 divided by 3?", answer: "5" }),
+                // () => ({ question: "Complete the word: T_ck_t (Movie related)", answer: "Ticket" }),
+                () => {
+                    let num = Math.floor(1000 + Math.random() * 9000);
+                    return { question: `Enter the number: ${num}`, answer: num.toString() };
+                }
+            ];
+            return captchaTypes[Math.floor(Math.random() * captchaTypes.length)]();
+        }
+
+        function proceedBooking() {
+            selectedSeats = Array.from(document.querySelectorAll(".seat.selected"));
+            if (selectedSeats.length > 0) {
+                let totalPrice = selectedSeats.reduce((sum, seat) => sum + parseInt(seat.dataset.price), 0);
+                let captcha = generateCaptcha();
+                let userAnswer = prompt(captcha.question);
+                if (userAnswer && userAnswer.toLowerCase() === captcha.answer.toLowerCase()) {
+                    alert(`Booking confirmed for ${selectedSeats.length} seats. Total Price: ₹${totalPrice}`);
+                    selectedSeats.forEach(seat => {
+                        seat.classList.remove("selected");
+                        seat.classList.add("occupied");
+                    });
+                } else {
+                    alert("CAPTCHA verification failed. Try again.");
+                }
+            } else {
+                alert("Please select at least one seat.");
+            }
+        }
+        createSeats("lounge", 8, 3, seatPrices.lounge, "lounge");
+        createSeats("royal", 5, 2, seatPrices.royal, "royal");
+
+        createSeats("prime", 10, 2, seatPrices.prime, "prime");
+        createSeats("marvel", 0, 2, seatPrices.marvel, "marvel");
+
+
+    </script>
+</body>
+
+</html>
